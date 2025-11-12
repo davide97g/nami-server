@@ -1,0 +1,10 @@
+board_manager:
+  additional_urls:
+    - https://dl.espressif.com/dl/package_esp32_index.json
+directories:
+  data: ./arduino_data
+  downloads: ./arduino_downloads
+  user: ./arduino_user
+logging:
+  file: ./arduino-cli.log
+  level: info

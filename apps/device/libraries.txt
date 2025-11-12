@@ -1,0 +1,21 @@
+# Arduino Library Dependencies
+# This file lists all required libraries for the Nami project.
+# Install them using: ./scripts/install-libraries.sh
+# Or manually: arduino-cli lib install "Library Name"
+
+# Adafruit GFX Library - Graphics library for displays
+# https://github.com/adafruit/Adafruit-GFX-Library
+Adafruit GFX Library
+
+# Adafruit SSD1306 - Driver for SSD1306 OLED displays
+# https://github.com/adafruit/Adafruit_SSD1306
+Adafruit SSD1306
+
+# ArduinoJson - JSON parsing library
+# https://github.com/bblanchon/ArduinoJson
+ArduinoJson
+
+# WebSockets - WebSocket client library for ESP32
+# https://github.com/Links2004/arduinoWebSockets
+WebSockets
+

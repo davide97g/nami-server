@@ -1,0 +1,18 @@
+{
+  "name": "nami-device",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "compile": "bash scripts/compile.sh",
+    "upload": "bash scripts/upload.sh",
+    "serial-monitor": "bash scripts/serial-monitor.sh",
+    "serial-monitor:9600": "bash scripts/serial-monitor.sh 9600",
+    "serial-monitor:115200": "bash scripts/serial-monitor.sh 115200",
+    "install-libraries": "bash scripts/install-libraries.sh",
+    "compile-and-upload": "bash scripts/compile-and-upload.sh",
+    "autoport": "bash scripts/autoport.sh"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

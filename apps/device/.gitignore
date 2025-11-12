@@ -1,0 +1,18 @@
+# Arduino CLI generated files
+arduino-cli.log
+arduino_data
+arduino_downloads
+arduino_user
+
+# IDE directories
+.vscode/
+.cursor/
+
+# Build artifacts (if Arduino CLI generates them in project root)
+*.hex
+*.elf
+*.bin
+build/
+
+# Sensitive credentials - never commit this file!
+**/*/secrets.h
