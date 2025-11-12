@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const App = () => {
   const [status, setStatus] = useState<string>('Loading...');
   const [info, setInfo] = useState<any>(null);
+  const [message, setMessage] = useState<string>('');
+  const [wsConnected, setWsConnected] = useState<boolean>(false);
+  const [lastSentMessage, setLastSentMessage] = useState<string>('');
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -27,7 +31,56 @@ const App = () => {
 
     fetchStatus();
     fetchInfo();
+
+    // Connect to WebSocket
+    const ws = new WebSocket('ws://localhost:3000');
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setWsConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      console.log('WebSocket message received:', event.data);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setWsConnected(false);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setWsConnected(false);
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
+
+  const handleSendMessage = () => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      alert('WebSocket is not connected');
+      return;
+    }
+
+    if (!message.trim()) {
+      alert('Please enter a message');
+      return;
+    }
+
+    wsRef.current.send(message);
+    setLastSentMessage(message);
+    setMessage('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -40,6 +93,40 @@ const App = () => {
           {info?.version && (
             <p className="text-sm text-gray-500">
               <span className="font-medium">Version:</span> {info.version}
+            </p>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Send Message to ESP32</h2>
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter message to send..."
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Message input"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!wsConnected}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Send message"
+            >
+              Send
+            </button>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <div className={`w-3 h-3 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-gray-600">
+              WebSocket: {wsConnected ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
+          {lastSentMessage && (
+            <p className="mt-2 text-sm text-gray-500">
+              Last sent: <span className="font-medium">{lastSentMessage}</span>
             </p>
           )}
         </div>

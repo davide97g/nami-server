@@ -39,6 +39,21 @@ void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   display.clearDisplay();
 
+  // --- Startup Display ---
+  // Display "nami" text with bitmap
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print("nami");
+  // Calculate text width: approximately 6 pixels per character
+  int textWidth = 4 * 6; // "nami" is 4 characters
+  // Display bitmap right after text (40x30px bitmap), aligned with text
+  display.drawXBitmap(textWidth + 2, 0, epd_bitmap_25, 40, 30, SSD1306_WHITE);
+  display.display();
+  
+  // 2 second delay
+  delay(2000);
+
   // --- WiFi Connection ---
   // Connect to WiFi and display status on screen
   bool wifiConnected = connectToWiFi(display);

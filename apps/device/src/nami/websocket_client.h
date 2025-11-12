@@ -12,11 +12,11 @@
 #define WEBSOCKET_PATH "/"
 #define INFO_ENDPOINT "http://raspberrypi.local:3000/info"
 
-// External bitmap declaration (defined in nami.ino)
-extern const unsigned char epd_bitmap_25[];
-
 // Global WebSocket client instance
 WebSocketsClient webSocket;
+
+// Global display reference for use in event handler
+Adafruit_SSD1306* globalDisplay = nullptr;
 
 /**
  * WebSocket event handler - called when events occur
@@ -25,13 +25,84 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
       Serial.println("[WebSocket] Disconnected");
+      if (globalDisplay) {
+        globalDisplay->clearDisplay();
+        globalDisplay->setTextSize(1);
+        globalDisplay->setTextColor(SSD1306_WHITE);
+        globalDisplay->setCursor(0, 0);
+        globalDisplay->println("WebSocket");
+        globalDisplay->setCursor(0, 12);
+        globalDisplay->println("Disconnected");
+        globalDisplay->display();
+      }
       break;
     case WStype_CONNECTED:
       Serial.println("[WebSocket] Connected to server!");
+      // Send identification message to server
+      webSocket.sendTXT("{\"type\":\"identify\",\"client\":\"ESP32\"}");
       break;
     case WStype_TEXT:
-      Serial.print("[WebSocket] Received text: ");
-      Serial.println((char*)payload);
+      {
+        String message = String((char*)payload);
+        Serial.print("[WebSocket] Received text: ");
+        Serial.println(message);
+        
+        // Display message on OLED
+        if (globalDisplay) {
+          globalDisplay->clearDisplay();
+          globalDisplay->setTextSize(1);
+          globalDisplay->setTextColor(SSD1306_WHITE);
+          
+          // Display "Message:" header
+          globalDisplay->setCursor(0, 0);
+          globalDisplay->println("Message:");
+          
+          // Display the message, wrapping if necessary
+          int lineHeight = 8;
+          int maxWidth = 128;
+          int maxLines = 7; // Leave some space
+          int yPos = 12;
+          int charWidth = 6; // Approximate character width for text size 1
+          
+          // Split message into lines that fit the display width
+          int startPos = 0;
+          int lineCount = 0;
+          
+          while (startPos < message.length() && lineCount < maxLines) {
+            int charsPerLine = maxWidth / charWidth;
+            int endPos = startPos + charsPerLine;
+            
+            // If message is longer than one line, try to break at a space
+            if (endPos < message.length()) {
+              int lastSpace = message.lastIndexOf(' ', endPos);
+              if (lastSpace > startPos) {
+                endPos = lastSpace;
+              }
+            }
+            
+            String line = message.substring(startPos, endPos);
+            globalDisplay->setCursor(0, yPos);
+            globalDisplay->println(line);
+            
+            yPos += lineHeight;
+            lineCount++;
+            startPos = endPos;
+            
+            // Skip space if we broke at a space
+            if (startPos < message.length() && message.charAt(startPos) == ' ') {
+              startPos++;
+            }
+          }
+          
+          // If message was truncated, show "..."
+          if (startPos < message.length()) {
+            globalDisplay->setCursor(0, yPos);
+            globalDisplay->println("...");
+          }
+          
+          globalDisplay->display();
+        }
+      }
       break;
     case WStype_BIN:
       Serial.print("[WebSocket] Received binary data, length: ");
@@ -56,6 +127,9 @@ bool connectWebSocket(Adafruit_SSD1306& display) {
     Serial.println("[WebSocket] WiFi not connected");
     return false;
   }
+
+  // Store display reference for use in event handler
+  globalDisplay = &display;
 
   display.clearDisplay();
   display.setTextSize(1);
@@ -197,12 +271,8 @@ bool fetchAndDisplaySystemInfo(Adafruit_SSD1306& display) {
     if (hostname.length() > 16) {
       hostname = hostname.substring(0, 16);
     }
-    // Display "nami" text (or hostname) on the same line as bitmap
+    // Display hostname text
     display.print(hostname);
-    // Calculate text width: approximately 6 pixels per character
-    int textWidth = hostname.length() * 6;
-    // Display bitmap right after text (40x30px bitmap), aligned with text
-    display.drawXBitmap(textWidth + 2, yPos, epd_bitmap_25, 40, 30, SSD1306_WHITE);
     yPos += lineHeight;
     
     // Platform
