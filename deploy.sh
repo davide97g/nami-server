@@ -32,8 +32,11 @@ fi
 echo "🧱 Building project..."
 bun run build
 
+echo "🧹 Cleaning dist folder on Raspberry Pi..."
+sshpass -p "$PI_PASSWORD" ssh -o StrictHostKeyChecking=no $PI_USER@$PI_HOST "rm -rf $REMOTE_DIR/dist"
+
 echo "🚀 Copying dist folder to Raspberry Pi..."
-sshpass -p "$PI_PASSWORD" scp -r -o StrictHostKeyChecking=no dist package.json .nvmrc $PI_USER@$PI_HOST:$REMOTE_DIR
+sshpass -p "$PI_PASSWORD" scp -r -o StrictHostKeyChecking=no dist .nvmrc $PI_USER@$PI_HOST:$REMOTE_DIR
 
 # echo "🚀 Running script with Node on Pi..."
 # sshpass -p "$PI_PASSWORD" ssh -o StrictHostKeyChecking=no $PI_USER@$PI_HOST "cd $REMOTE_DIR && \

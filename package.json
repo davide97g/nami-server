@@ -6,7 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "bun run --watch src/server.ts",
-    "build": "rm -rf dist && bun tsc",
+    "build": "rm -rf dist && bun build src/server.ts --outdir dist --target node --minify",
     "start": "node dist/server.js",
     "deploy": "bash ./deploy.sh"
   },
