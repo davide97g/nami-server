@@ -16,7 +16,7 @@
  * @param y The y-coordinate for the text
  * @return The x-coordinate where the text should start
  */
-int centerText(Adafruit_SSD1306& display, const char* text, int y) {
+inline int centerText(Adafruit_SSD1306& display, const char* text, int y) {
   display.setTextSize(1);
   int16_t x1, y1;
   uint16_t w, h;
@@ -31,7 +31,7 @@ int centerText(Adafruit_SSD1306& display, const char* text, int y) {
  * @param y The y-coordinate for the text
  * @return The x-coordinate where the text should start
  */
-int centerText(Adafruit_SSD1306& display, const String& text, int y) {
+inline int centerText(Adafruit_SSD1306& display, const String& text, int y) {
   return centerText(display, text.c_str(), y);
 }
 

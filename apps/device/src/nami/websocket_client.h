@@ -97,9 +97,13 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         globalDisplay->clearDisplay();
         globalDisplay->setTextSize(1);
         globalDisplay->setTextColor(SSD1306_WHITE);
-        globalDisplay->setCursor(0, 0);
+        
+        int x1 = centerText(*globalDisplay, "WebSocket", 0);
+        globalDisplay->setCursor(x1, 20);
         globalDisplay->println("WebSocket");
-        globalDisplay->setCursor(0, 12);
+        
+        int x2 = centerText(*globalDisplay, "Disconnected", 0);
+        globalDisplay->setCursor(x2, 35);
         globalDisplay->println("Disconnected");
         globalDisplay->display();
       }
@@ -126,20 +130,21 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
             // Display as ASCII art (preserve line breaks, handle scrolling)
             displayAsciiArt(*globalDisplay, message);
           } else {
-            // Display as regular message (with header)
+            // Display as regular message (centered)
             globalDisplay->clearDisplay();
             globalDisplay->setTextSize(1);
             globalDisplay->setTextColor(SSD1306_WHITE);
             
-            // Display "Message:" header
-            globalDisplay->setCursor(0, 0);
+            // Display "Message:" header (centered)
+            int xHeader = centerText(*globalDisplay, "Message:", 0);
+            globalDisplay->setCursor(xHeader, 5);
             globalDisplay->println("Message:");
             
-            // Display the message, wrapping if necessary
+            // Display the message, wrapping if necessary (centered)
             int lineHeight = 8;
             int maxWidth = 128;
-            int maxLines = 7; // Leave some space
-            int yPos = 12;
+            int maxLines = 6; // Leave some space
+            int yPos = 18;
             int charWidth = 6; // Approximate character width for text size 1
             
             // Split message into lines that fit the display width
@@ -159,7 +164,8 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
               }
               
               String line = message.substring(startPos, endPos);
-              globalDisplay->setCursor(0, yPos);
+              int xLine = centerText(*globalDisplay, line, 0);
+              globalDisplay->setCursor(xLine, yPos);
               globalDisplay->println(line);
               
               yPos += lineHeight;
@@ -172,9 +178,10 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
               }
             }
             
-            // If message was truncated, show "..."
+            // If message was truncated, show "..." (centered)
             if (startPos < message.length()) {
-              globalDisplay->setCursor(0, yPos);
+              int xDots = centerText(*globalDisplay, "...", 0);
+              globalDisplay->setCursor(xDots, yPos);
               globalDisplay->println("...");
             }
             
@@ -213,9 +220,13 @@ bool connectWebSocket(Adafruit_SSD1306& display) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
+  
+  int x1 = centerText(display, "Connecting", 0);
+  display.setCursor(x1, 20);
   display.println("Connecting");
-  display.setCursor(0, 12);
+  
+  int x2 = centerText(display, "WebSocket...", 0);
+  display.setCursor(x2, 35);
   display.println("WebSocket...");
   display.display();
 
@@ -238,9 +249,13 @@ bool connectWebSocket(Adafruit_SSD1306& display) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
+    
+    int x1 = centerText(display, "WebSocket", 0);
+    display.setCursor(x1, 20);
     display.println("WebSocket");
-    display.setCursor(0, 12);
+    
+    int x2 = centerText(display, "Connected!", 0);
+    display.setCursor(x2, 35);
     display.println("Connected!");
     display.display();
     delay(2000);
@@ -250,9 +265,13 @@ bool connectWebSocket(Adafruit_SSD1306& display) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
+    
+    int x1 = centerText(display, "WebSocket", 0);
+    display.setCursor(x1, 20);
     display.println("WebSocket");
-    display.setCursor(0, 12);
+    
+    int x2 = centerText(display, "Failed!", 0);
+    display.setCursor(x2, 35);
     display.println("Failed!");
     display.display();
     delay(2000);
@@ -275,9 +294,13 @@ bool fetchAndDisplaySystemInfo(Adafruit_SSD1306& display) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
+  
+  int x1 = centerText(display, "Fetching", 0);
+  display.setCursor(x1, 20);
   display.println("Fetching");
-  display.setCursor(0, 12);
+  
+  int x2 = centerText(display, "system info...", 0);
+  display.setCursor(x2, 35);
   display.println("system info...");
   display.display();
 
@@ -303,9 +326,14 @@ bool fetchAndDisplaySystemInfo(Adafruit_SSD1306& display) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
+    
+    int x1 = centerText(display, "HTTP Error", 0);
+    display.setCursor(x1, 15);
     display.println("HTTP Error");
-    display.setCursor(0, 12);
+    
+    String codeStr = "Code: " + String(httpCode);
+    int x2 = centerText(display, codeStr, 0);
+    display.setCursor(x2, 30);
     display.print("Code: ");
     display.println(httpCode);
     display.display();
@@ -325,9 +353,14 @@ bool fetchAndDisplaySystemInfo(Adafruit_SSD1306& display) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
+    
+    int x1 = centerText(display, "Parse Error", 0);
+    display.setCursor(x1, 20);
     display.println("Parse Error");
-    display.setCursor(0, 12);
+    
+    String errorStr = String(error.c_str());
+    int x2 = centerText(display, errorStr, 0);
+    display.setCursor(x2, 35);
     display.println(error.c_str());
     display.display();
     delay(3000);

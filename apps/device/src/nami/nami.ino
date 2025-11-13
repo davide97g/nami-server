@@ -40,19 +40,63 @@ void setup() {
   display.clearDisplay();
 
   // --- Startup Display ---
-  // Display "nami" text with bitmap
-  display.setTextSize(1);
+  // Display "nami" text centered and enlarged with bitmap
+  display.setTextSize(2); // Enlarged text
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
+  
+  // Center "nami" text (text size 2: ~12 pixels per character)
+  int textWidth = 4 * 12; // "nami" is 4 characters at size 2
+  int xText = (SCREEN_WIDTH - textWidth) / 2;
+  display.setCursor(xText, 10);
   display.print("nami");
-  // Calculate text width: approximately 6 pixels per character
-  int textWidth = 4 * 6; // "nami" is 4 characters
-  // Display bitmap right after text (40x30px bitmap), aligned with text
-  display.drawXBitmap(textWidth + 2, 0, epd_bitmap_25, 40, 30, SSD1306_WHITE);
+  
+  // Center bitmap below text (40x30px bitmap)
+  int xBitmap = (SCREEN_WIDTH - 40) / 2;
+  display.drawXBitmap(xBitmap, 30, epd_bitmap_25, 40, 30, SSD1306_WHITE);
   display.display();
   
   // 2 second delay
   delay(2000);
+
+  // --- Setup Animation ---
+  // Display "setting up your nami" with animated dots for 5 seconds
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  String setupText = "setting up your nami";
+  int xSetup = centerText(display, setupText, 0);
+  display.setCursor(xSetup, 25);
+  display.print(setupText);
+  
+  unsigned long setupStartTime = millis();
+  const unsigned long setupDuration = 5000; // 5 seconds
+  int dotCount = 0;
+  
+  while (millis() - setupStartTime < setupDuration) {
+    // Clear dots area
+    display.fillRect(0, 35, SCREEN_WIDTH, 10, SSD1306_BLACK);
+    
+    // Display dots (one at a time, looping through 3)
+    String dots = "";
+    for (int i = 0; i < dotCount; i++) {
+      dots += ".";
+    }
+    
+    int xDots = centerText(display, dots, 0);
+    display.setCursor(xDots, 35);
+    display.print(dots);
+    display.display();
+    
+    // Update dot count (0, 1, 2, then back to 0)
+    delay(500); // Change dot every 500ms
+    dotCount = (dotCount + 1) % 3;
+  }
+  
+  // Clear display before WiFi connection
+  display.clearDisplay();
+  display.display();
+  delay(200);
 
   // --- WiFi Connection ---
   // Connect to WiFi and display status on screen
@@ -71,11 +115,17 @@ void setup() {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
+    
+    int x1 = centerText(display, "WiFi Failed", 0);
+    display.setCursor(x1, 10);
     display.println("WiFi Failed");
-    display.setCursor(0, 12);
+    
+    int x2 = centerText(display, "Check config", 0);
+    display.setCursor(x2, 25);
     display.println("Check config");
-    display.setCursor(0, 24);
+    
+    int x3 = centerText(display, "Restarting...", 0);
+    display.setCursor(x3, 40);
     display.println("Restarting...");
     display.display();
     delay(3000);
