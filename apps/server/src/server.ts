@@ -7,11 +7,15 @@ import express from "express";
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import http from "http";
+import OpenAI from "openai";
 import os from "os";
 import { WebSocket, WebSocketServer } from "ws";
-import OpenAI from "openai";
 import packageJson from "../package.json" assert { type: "json" };
 import { getMessages, sendMessage } from "./chat/chat.js";
+import {
+  getPokemonBitmap,
+  getPokemonSmallestSprite,
+} from "./pokemon/pokemon.js";
 
 const app = express();
 app.use(cors());
@@ -166,6 +170,60 @@ const openai = openaiApiKey
       apiKey: openaiApiKey,
     })
   : null;
+
+// Pokemon API endpoint
+app.post("/api/pokemon/smallest-sprite", async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id || typeof id !== "number") {
+      return res.status(400).json({
+        success: false,
+        error: "Pokemon ID is required and must be a number",
+      });
+    }
+
+    const result = await getPokemonSmallestSprite(id);
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("Error getting Pokemon smallest sprite:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to get Pokemon smallest sprite",
+      message: error.message || "Unknown error",
+    });
+  }
+});
+
+// Pokemon Bitmap API endpoint
+app.post("/api/pokemon/bitmap", async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id || typeof id !== "number") {
+      return res.status(400).json({
+        success: false,
+        error: "Pokemon ID is required and must be a number",
+      });
+    }
+
+    const result = await getPokemonBitmap(id);
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("Error getting Pokemon bitmap:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to get Pokemon bitmap",
+      message: error.message || "Unknown error",
+    });
+  }
+});
 
 // ASCII Art API endpoint
 app.post("/api/ascii-art", async (req, res) => {

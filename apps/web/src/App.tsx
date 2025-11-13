@@ -9,6 +9,7 @@ import {
 import Chat from "./Chat";
 import { getServerUrl } from "./config";
 import Dashboard from "./Dashboard";
+import Pokemon from "./Pokemon";
 
 const Navigation = () => {
   const location = useLocation();
@@ -68,6 +69,16 @@ const Navigation = () => {
             >
               Chat
             </Link>
+            <Link
+              to="/pokemon"
+              className={`${
+                location.pathname === "/pokemon"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              } py-4 px-1 border-b-2 border-transparent font-medium text-sm transition-colors`}
+            >
+              Pokemon
+            </Link>
           </div>
           <button
             onClick={handleRandomAsciiArt}
@@ -91,6 +102,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/pokemon" element={<Pokemon />} />
         </Routes>
       </div>
     </BrowserRouter>
