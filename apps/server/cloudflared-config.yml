@@ -1,0 +1,17 @@
+tunnel: 39abe22a-34b2-42a8-affc-3215557359ff
+credentials-file: /etc/cloudflared/credentials.json
+origincert: /etc/ssl/cloudflare/origin.crt
+
+ingress:
+  - hostname: nami.davideghiotto.it
+    service: https://localhost:3000
+    originRequest:
+      noHappyEyeballs: true
+      connectTimeout: 10s
+      tcpKeepAlive: 30s
+      keepAliveConnections: 100
+      keepAliveTimeout: 90s
+      httpHostHeader: nami.davideghiotto.it
+      originServerName: nami.davideghiotto.it
+      noTLSVerify: false
+  - service: http_status:404

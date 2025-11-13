@@ -7,10 +7,10 @@
 #include <Adafruit_SSD1306.h>
 #include "wifi_connection.h"
 
-#define WEBSOCKET_HOST "raspberrypi.local"
-#define WEBSOCKET_PORT 3000
+#define WEBSOCKET_HOST "nami.davideghiotto.it"
+#define WEBSOCKET_PORT 443
 #define WEBSOCKET_PATH "/"
-#define INFO_ENDPOINT "https://raspberrypi.local:3000/info"
+#define INFO_ENDPOINT "https://nami.davideghiotto.it/info"
 
 // Global WebSocket client instance
 WebSocketsClient webSocket;

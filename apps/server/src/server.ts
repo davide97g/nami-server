@@ -12,8 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 const options = {
-  key: readFileSync("/home/davide/certs/key.pem"),
-  cert: readFileSync("/home/davide/certs/cert.pem"),
+  key: readFileSync("/etc/ssl/cloudflare/origin.key"),
+  cert: readFileSync("/etc/ssl/cloudflare/origin.crt"),
 };
 
 const server = https.createServer(options, app);
@@ -254,6 +254,10 @@ wss.on("connection", (ws: WebSocket, req) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 HTTPS server running on https://raspberrypi.local:${PORT}`);
-  console.log(`🔌 WebSocket server ready on wss://raspberrypi.local:${PORT}`);
+  console.log(
+    `🚀 HTTPS server running on https://nami.davideghiotto.it:${PORT}`
+  );
+  console.log(
+    `🔌 WebSocket server ready on wss://nami.davideghiotto.it:${PORT}`
+  );
 });
