@@ -1,3 +1,7 @@
+// Load environment variables (for Node.js compatibility)
+// Bun automatically loads .env files, but this ensures compatibility
+import "dotenv/config";
+
 import cors from "cors";
 import express from "express";
 import { existsSync } from "fs";
@@ -6,6 +10,7 @@ import http from "http";
 import os from "os";
 import { WebSocket, WebSocketServer } from "ws";
 import packageJson from "../package.json" assert { type: "json" };
+import { getMessages, sendMessage } from "./chat/chat.js";
 
 const app = express();
 app.use(cors());
@@ -114,6 +119,42 @@ app.get("/info", async (req, res) => {
     res.json(info);
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve system information" });
+  }
+});
+
+// Chat API endpoints
+app.post("/api/chat/messages", async (req, res) => {
+  try {
+    const { message, conversationId } = req.body;
+
+    if (!message || typeof message !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Message is required and must be a string" });
+    }
+
+    const assistantMessage = await sendMessage(message, conversationId);
+    res.json(assistantMessage);
+  } catch (error: any) {
+    console.error("Error sending chat message:", error);
+    res.status(500).json({
+      error: "Failed to send message",
+      message: error.message || "Unknown error",
+    });
+  }
+});
+
+app.get("/api/chat/messages", (req, res) => {
+  try {
+    const conversationId = req.query.conversationId as string | undefined;
+    const messages = getMessages(conversationId);
+    res.json(messages);
+  } catch (error: any) {
+    console.error("Error getting chat messages:", error);
+    res.status(500).json({
+      error: "Failed to retrieve messages",
+      message: error.message || "Unknown error",
+    });
   }
 });
 
