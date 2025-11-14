@@ -78,19 +78,33 @@ void displayPokemonBitmap(
   if (xBitmap + width > 128) xBitmap = 128 - width;
   if (yBitmap + height > 64) yBitmap = 64 - height;
   
-  // Draw bitmap pixel by pixel
+  // Draw bitmap pixel by pixel manually to ensure correct display
   // Our bitmap data is in MSB-first format (1 byte = 8 pixels horizontally)
-  // drawXBitmap uses MSB first, which matches our format
-  // For ESP32, we can use drawXBitmap directly with RAM data
-  // If that doesn't work, we'll manually draw pixels
+  // Each byte represents 8 horizontal pixels, with MSB being the leftmost pixel
+  // bytesPerRow is already declared above
   
-  // Try using drawXBitmap first (works on ESP32 with RAM data)
-  // Cast to const uint8_t* for compatibility
-  const uint8_t* bitmapPtr = bitmapData;
-  
-  // Use drawXBitmap - on ESP32 this should work with RAM data
-  // If it doesn't work, we'll fall back to manual pixel drawing
-  display.drawXBitmap(xBitmap, yBitmap, bitmapPtr, width, height, SSD1306_WHITE);
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < bytesPerRow; x++) {
+      uint8_t byte = bitmapData[y * bytesPerRow + x];
+      
+      // Extract each bit from the byte (MSB first)
+      for (int bit = 0; bit < 8; bit++) {
+        int pixelX = x * 8 + bit;
+        if (pixelX >= width) break; // Don't draw beyond bitmap width
+        
+        // Check if bit is set (MSB first: bit 7 is leftmost)
+        bool pixelOn = (byte & (1 << (7 - bit))) != 0;
+        
+        // Draw pixel at screen position
+        int screenX = xBitmap + pixelX;
+        int screenY = yBitmap + y;
+        
+        if (pixelOn) {
+          display.drawPixel(screenX, screenY, SSD1306_WHITE);
+        }
+      }
+    }
+  }
   
   display.display();
   

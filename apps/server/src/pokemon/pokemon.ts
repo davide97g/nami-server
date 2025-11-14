@@ -179,19 +179,32 @@ const convertToBitmap = async (
     // Ensure width is byte-aligned (multiple of 8) for OLED displays
     const byteAlignedWidth = Math.ceil(width / 8) * 8;
 
-    // Process image: resize, convert to grayscale, threshold to 1-bit
+    // Process image: resize with transparent background
+    // First, get the alpha channel BEFORE processing to detect transparent pixels
+    const alphaChannel = await sharp(imageBuffer)
+      .resize(byteAlignedWidth, height, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 }, // Transparent background
+      })
+      .ensureAlpha()
+      .extractChannel(3) // Extract alpha channel (channel 3 = alpha)
+      .greyscale()
+      .raw()
+      .toBuffer();
+    
+    // Process image: resize, convert to grayscale (but don't threshold yet)
     const processedImage = await sharp(imageBuffer)
       .resize(byteAlignedWidth, height, {
         fit: "contain",
-        background: { r: 255, g: 255, b: 255, alpha: 1 },
+        background: { r: 0, g: 0, b: 0, alpha: 0 }, // Transparent/black background
       })
       .greyscale()
-      .threshold(128) // Convert to 1-bit (0 or 255)
       .raw()
       .toBuffer();
 
     // Convert to bitmap byte array format
     // Each byte represents 8 pixels horizontally (MSB first for SSD1306)
+    // Only set bits for non-background pixels (transparent or very light pixels are background)
     const bitmapData: number[] = [];
     const bytesPerRow = byteAlignedWidth / 8;
 
@@ -202,9 +215,15 @@ const convertToBitmap = async (
           const pixelX = x * 8 + bit;
           const pixelIndex = y * byteAlignedWidth + pixelX;
           const pixelValue = processedImage[pixelIndex] || 0;
-          // If pixel is white (255), set bit to 1 (OLED displays typically invert)
-          // If pixel is black (0), set bit to 0
-          if (pixelValue > 127) {
+          const alphaValue = alphaChannel[pixelIndex] || 0;
+          
+          // Only set bit if pixel is part of the Pokemon (not background):
+          // 1. Pixel must have alpha > 128 (not transparent)
+          // 2. Pixel must be dark enough (value < 180) - light/white pixels are background
+          // Background pixels (transparent or white) should remain 0 (not drawn)
+          const isPartOfPokemon = alphaValue > 128 && pixelValue < 180;
+          
+          if (isPartOfPokemon) {
             byte |= 1 << (7 - bit); // MSB first
           }
         }
@@ -253,7 +272,7 @@ export const getPokemonSmallestSprite = async (
 };
 
 /**
- * Fetch Pokemon details, get smallest sprite, and convert to bitmap
+ * Fetch Pokemon details, get default sprite, and convert to bitmap
  */
 export const getPokemonBitmap = async (
   id: number
@@ -273,13 +292,15 @@ export const getPokemonBitmap = async (
     }
 
     const pokemon: PokemonResponse = (await response.json()) as PokemonResponse;
-    const smallestSprite = await findSmallestSprite(pokemon.sprites);
+    
+    // Use default front sprite instead of smallest
+    const defaultSprite = pokemon.sprites.front_default;
 
-    if (!smallestSprite) {
-      throw new Error("No sprite found for this Pokemon");
+    if (!defaultSprite) {
+      throw new Error("No default sprite found for this Pokemon");
     }
 
-    const bitmap = await convertToBitmap(smallestSprite);
+    const bitmap = await convertToBitmap(defaultSprite);
 
     return {
       pokemonId: pokemon.id,
@@ -287,7 +308,7 @@ export const getPokemonBitmap = async (
       width: bitmap.width,
       height: bitmap.height,
       bitmapData: bitmap.bitmapData,
-      originalSpriteUrl: smallestSprite,
+      originalSpriteUrl: defaultSprite,
     };
   } catch (error: any) {
     throw new Error(`Failed to get Pokemon bitmap: ${error.message}`);
