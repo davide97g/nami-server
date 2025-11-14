@@ -52,11 +52,34 @@ sshpass -p "$PI_PASSWORD" scp -r -o StrictHostKeyChecking=no $FILES_TO_COPY $PI_
 echo "🔧 Setup node version on Raspberry Pi..."
 sshpass -p "$PI_PASSWORD" ssh -o StrictHostKeyChecking=no $PI_USER@$PI_HOST "source ~/.nvm/nvm.sh && cd $REMOTE_DIR && nvm use"
 
-echo "📦 Setting up PM2 on Raspberry Pi..."
+echo "📦 Installing dependencies on Raspberry Pi..."
 sshpass -p "$PI_PASSWORD" ssh -o StrictHostKeyChecking=no $PI_USER@$PI_HOST << EOF
   source ~/.nvm/nvm.sh
   cd $REMOTE_DIR
   nvm use
+  
+  # Install all dependencies first
+  echo "📥 Installing dependencies..."
+  npm install --production
+  
+  # Check if Sharp is installed for the correct platform (Linux ARM64)
+  SHARP_INSTALLED=false
+  if [ -d "node_modules/sharp" ]; then
+    # Check if Sharp binary exists and is for Linux ARM64
+    if [ -f "node_modules/sharp/build/Release/sharp-linux-arm64.node" ] || [ -f "node_modules/sharp/lib/sharp-linux-arm64.node" ] || find node_modules/sharp -name "*linux-arm64*" -type f 2>/dev/null | grep -q .; then
+      SHARP_INSTALLED=true
+      echo "✅ Sharp is already installed for Linux ARM64"
+    else
+      echo "⚠️  Sharp is installed but not for Linux ARM64, will reinstall"
+      rm -rf node_modules/sharp
+    fi
+  fi
+  
+  # Install Sharp for Linux ARM64 if not already installed
+  if [ "$SHARP_INSTALLED" = false ]; then
+    echo "📥 Installing Sharp for Linux ARM64..."
+    npm install --os=linux --cpu=arm64 sharp
+  fi
   
   # Install PM2 globally if not already installed
   if ! command -v pm2 &> /dev/null; then

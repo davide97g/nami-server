@@ -211,9 +211,37 @@ app.post("/api/pokemon/bitmap", async (req, res) => {
     }
 
     const result = await getPokemonBitmap(id);
+
+    // Send bitmap data to all connected ESP32 clients via WebSocket
+    const pokemonMessage = JSON.stringify({
+      type: "pokemon_bitmap",
+      data: {
+        pokemonId: result.pokemonId,
+        pokemonName: result.pokemonName,
+        width: result.width,
+        height: result.height,
+        bitmapData: result.bitmapData,
+      },
+    });
+
+    let sentToEsp32 = false;
+    esp32Clients.forEach((esp32Client) => {
+      if (esp32Client.readyState === WebSocket.OPEN) {
+        esp32Client.send(pokemonMessage);
+        sentToEsp32 = true;
+      }
+    });
+
+    if (sentToEsp32) {
+      console.log(
+        `[Pokemon] Sent bitmap for Pokemon #${result.pokemonId} (${result.pokemonName}) to ESP32 clients`
+      );
+    }
+
     res.json({
       success: true,
       data: result,
+      sentToEsp32,
     });
   } catch (error: any) {
     console.error("Error getting Pokemon bitmap:", error);

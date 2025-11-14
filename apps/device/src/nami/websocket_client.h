@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 #include <Adafruit_SSD1306.h>
 #include "wifi_connection.h"
+#include "pokemon_display.h"
 
 #define WEBSOCKET_HOST "raspberrypi.local"
 #define WEBSOCKET_PORT 3000
@@ -121,6 +122,12 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         
         // Display message on OLED
         if (globalDisplay) {
+          // First, check if this is a Pokemon bitmap message
+          if (parseAndDisplayPokemonBitmap(*globalDisplay, message)) {
+            // Successfully displayed Pokemon bitmap
+            break;
+          }
+          
           // Check if message contains ASCII art patterns (multiple lines, special chars)
           // For ASCII art, we preserve line breaks and display as-is
           bool isAsciiArt = message.indexOf('\n') != -1 || 

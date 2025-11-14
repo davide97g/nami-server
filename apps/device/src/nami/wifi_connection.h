@@ -65,11 +65,44 @@ bool connectToWiFi(Adafruit_SSD1306& display, int maxAttempts = 20, int attemptD
 
   // Properly initialize WiFi with delays to avoid first-boot failures
   WiFi.disconnect(true);  // Disconnect any previous connection
-  delay(100);
+  delay(200);
   WiFi.mode(WIFI_STA);
-  delay(100);
+  delay(200);
+  
+  // Start WiFi connection
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  delay(500);  // Give WiFi hardware time to initialize before checking status
+  
+  // Wait for WiFi hardware to initialize - ESP32 needs significant time on first boot
+  // The WiFi stack needs time to power up, scan for networks, and begin connection
+  unsigned long initStartTime = millis();
+  const unsigned long initTimeout = 4000; // Wait up to 4 seconds for initialization
+  int lastStatus = WiFi.status();
+  
+  // Wait until WiFi status indicates it's actively trying to connect
+  // or has already connected, or timeout is reached
+  while ((millis() - initStartTime < initTimeout)) {
+    int currentStatus = WiFi.status();
+    
+    // If already connected, we can proceed immediately
+    if (currentStatus == WL_CONNECTED) {
+      break;
+    }
+    
+    // If status changed from disconnected state, WiFi hardware is initializing
+    if (currentStatus != lastStatus && 
+        (lastStatus == WL_DISCONNECTED || lastStatus == WL_NO_SSID_AVAIL)) {
+      // Status changed, WiFi hardware is initializing - wait a bit more
+      delay(500);
+      break;
+    }
+    
+    delay(100);
+    lastStatus = currentStatus;
+  }
+  
+  // Additional delay to ensure WiFi stack is fully ready
+  // This is critical for first boot success
+  delay(1500);
 
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < maxAttempts) {
@@ -155,11 +188,36 @@ bool checkWiFiConnection(Adafruit_SSD1306& display) {
     
     // Properly reinitialize WiFi
     WiFi.disconnect(true);
-    delay(100);
+    delay(200);
     WiFi.mode(WIFI_STA);
-    delay(100);
+    delay(200);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    delay(500);
+    
+    // Wait for WiFi hardware to initialize
+    unsigned long initStartTime = millis();
+    const unsigned long initTimeout = 2000; // Wait up to 2 seconds for reconnection
+    int lastStatus = WiFi.status();
+    
+    while ((millis() - initStartTime < initTimeout)) {
+      int currentStatus = WiFi.status();
+      
+      // If already connected, we can proceed immediately
+      if (currentStatus == WL_CONNECTED) {
+        break;
+      }
+      
+      // If status changed from disconnected state, WiFi hardware is initializing
+      if (currentStatus != lastStatus && 
+          (lastStatus == WL_DISCONNECTED || lastStatus == WL_NO_SSID_AVAIL)) {
+        delay(500);
+        break;
+      }
+      
+      delay(100);
+      lastStatus = currentStatus;
+    }
+    
+    delay(1000);
     return false;
   }
   return true;
